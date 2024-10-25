@@ -90,7 +90,7 @@ sw.*
 *.swp
 /yarn.lock
 
-#package-lock.json
+package-lock.json
 
 # Sentry Config File
 .env.sentry-build-plugin
