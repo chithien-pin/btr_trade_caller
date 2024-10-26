@@ -48,18 +48,21 @@ function identifyLiquidityPools(price, historicalData) {
 function identifyOrderBlocks(price, historicalData) {
     const lastCandle = historicalData[historicalData.length - 1];
     const prevCandle = historicalData[historicalData.length - 2];
-
+    let strPrice = (price).toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    });
     // Kiểm tra xem có một khối lệnh giảm giá (Bearish Order Block)
     if (lastCandle.high > prevCandle.high && lastCandle.close < prevCandle.open) {
         if (price < lastCandle.low) {
-            return 'Giá chạm vào vùng Order Block giảm! Xem xét vào lệnh mua.';
+            return `Giá chạm vào vùng Order Block giảm! Xem xét vào lệnh mua. ${strPrice}`;
         }
     }
 
     // Kiểm tra khối lệnh tăng giá (Bullish Order Block)
     if (lastCandle.low < prevCandle.low && lastCandle.close > prevCandle.open) {
         if (price > lastCandle.high) {
-            return 'Giá chạm vào vùng Order Block tăng! Xem xét vào lệnh bán.';
+            return `Giá chạm vào vùng Order Block tăng! Xem xét vào lệnh bán. ${strPrice}`;
         }
     }
 
@@ -67,14 +70,17 @@ function identifyOrderBlocks(price, historicalData) {
 }
 
 // Hàm xác định Fair Value Gap (khoảng trống giá trị hợp lý)
-function identifyFairValueGap(historicalData) {
+function identifyFairValueGap(price, historicalData) {
     const lastCandle = historicalData[historicalData.length - 1];
     const prevCandle = historicalData[historicalData.length - 2];
     const secondPrevCandle = historicalData[historicalData.length - 3];
-
+    let strPrice = (price).toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    });
     // Fair Value Gap khi có khoảng trống giữa nến thứ nhất và thứ ba
     if (secondPrevCandle.low > prevCandle.high) {
-        return 'Xuất hiện khoảng trống giá trị hợp lý (Fair Value Gap)! Giá có thể lấp đầy khoảng trống này.';
+        return `Xuất hiện khoảng trống giá trị hợp lý (Fair Value Gap)! Giá có thể lấp đầy khoảng trống này. ${strPrice}`;
     }
 
     return null;
@@ -95,7 +101,7 @@ function checkICTConditions(price, historicalData) {
     }
 
     // Kiểm tra Fair Value Gaps
-    const fvgSignal = identifyFairValueGap(historicalData);
+    const fvgSignal = identifyFairValueGap(price, historicalData);
     if (fvgSignal) {
         return fvgSignal;
     }
@@ -121,8 +127,8 @@ async function getHistoricalData(symbol) {
     const endpoint = 'https://api.binance.com/api/v3/klines';
     const params = {
         symbol: symbol,
-        interval: '1m', // Thời gian nến 1 phút
-        limit: 10, // Lấy 10 cây nến gần nhất
+        interval: '5m', // Thời gian nến 1 phút
+        limit: 50, // Lấy 10 cây nến gần nhất
     };
 
     try {
@@ -150,4 +156,4 @@ setInterval(async () => {
             notifyTelegram('-4578785246', `Tín hiệu ICT cho ${symbol}: ${signal}`);
         }
     }
-}, 3000); // Lặp lại mỗi 60 giây
+}, 300000); // Lặp lại mỗi 5 phút
