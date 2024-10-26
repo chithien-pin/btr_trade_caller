@@ -86,28 +86,78 @@ function identifyFairValueGap(price, historicalData) {
     return null;
 }
 
-// Hàm kiểm tra tất cả các điều kiện ICT
 function checkICTConditions(price, historicalData) {
+    // Mức rủi ro và tỷ lệ lợi nhuận so với rủi ro
+    const riskRewardRatio = 2; // Tỷ lệ lợi nhuận/rủi ro, ví dụ 2:1
+    const stopLossBuffer = 0.002; // Buffer để đặt cắt lỗ dưới vùng thanh khoản hoặc Order Block
+
     // Kiểm tra Liquidity Pools
     const liquiditySignal = identifyLiquidityPools(price, historicalData);
     if (liquiditySignal) {
-        return liquiditySignal;
+        // Ví dụ: Đặt mức SL và TP dựa trên vùng thanh khoản
+        const entryPrice = price;
+        const stopLoss = price * (1 - stopLossBuffer); // Cắt lỗ cách giá hiện tại 0.2%
+        const takeProfit = price + (price - stopLoss) * riskRewardRatio; // TP theo tỷ lệ RR 2:1
+        return {
+            signal: liquiditySignal,
+            entry: entryPrice,
+            stopLoss: stopLoss,
+            takeProfit: takeProfit,
+        };
     }
 
     // Kiểm tra Order Blocks
     const orderBlockSignal = identifyOrderBlocks(price, historicalData);
     if (orderBlockSignal) {
-        return orderBlockSignal;
+        const entryPrice = price;
+        const stopLoss = price * (1 - stopLossBuffer); // Cắt lỗ ngay dưới Order Block
+        const takeProfit = price + (price - stopLoss) * riskRewardRatio; // TP theo tỷ lệ RR 2:1
+        return {
+            signal: orderBlockSignal,
+            entry: entryPrice,
+            stopLoss: stopLoss,
+            takeProfit: takeProfit,
+        };
     }
 
     // Kiểm tra Fair Value Gaps
     const fvgSignal = identifyFairValueGap(price, historicalData);
     if (fvgSignal) {
-        return fvgSignal;
+        const entryPrice = price;
+        const stopLoss = price * (1 - stopLossBuffer); // Cắt lỗ dưới FVG
+        const takeProfit = price + (price - stopLoss) * riskRewardRatio; // TP theo tỷ lệ RR 2:1
+        return {
+            signal: fvgSignal,
+            entry: entryPrice,
+            stopLoss: stopLoss,
+            takeProfit: takeProfit,
+        };
     }
 
     return null;
 }
+// Hàm kiểm tra tất cả các điều kiện ICT
+// function checkICTConditions(price, historicalData) {
+//     // Kiểm tra Liquidity Pools
+//     const liquiditySignal = identifyLiquidityPools(price, historicalData);
+//     if (liquiditySignal) {
+//         return liquiditySignal;
+//     }
+//
+//     // Kiểm tra Order Blocks
+//     const orderBlockSignal = identifyOrderBlocks(price, historicalData);
+//     if (orderBlockSignal) {
+//         return orderBlockSignal;
+//     }
+//
+//     // Kiểm tra Fair Value Gaps
+//     const fvgSignal = identifyFairValueGap(price, historicalData);
+//     if (fvgSignal) {
+//         return fvgSignal;
+//     }
+//
+//     return null;
+// }
 // Hàm gửi thông báo đến Telegram khi có tín hiệu
 async function notifyTelegram(chatId, message) {
     try {
